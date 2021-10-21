@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@+id/nav_my_home">
+
+    <fragment
+        android:id="@+id/nav_my_home"
+        android:name="com.example.unmall.ui.home.HomeFragment"
+        android:label="My Home"
+        tools:layout="@layout/fragment_home" />
+
+    <fragment
+        android:id="@+id/nav_my_orders"
+        android:name="com.example.unmall.ui.myOrder.MyOrdersFragment"
+        android:label="My Orders"
+        tools:layout="@layout/fragment_myorders" />
+
+    <fragment
+        android:id="@+id/nav_my_rewards"
+        android:name="com.example.unmall.ui.myRewards.MyRewardsFragment"
+        android:label="My Rewards"
+        tools:layout="@layout/fragment_myrewards" />
+    <fragment
+        android:id="@+id/nav_my_cart"
+        android:name="com.example.unmall.CartFragment"
+        android:label="fragment_cart"
+        tools:layout="@layout/fragment_cart" />
+    <fragment
+        android:id="@+id/nav_my_wishlist"
+        android:name="com.example.unmall.Wishlist_Fragment"
+        android:label="fragment_wishlist_"
+        tools:layout="@layout/fragment_wishlist_" />
+    <fragment
+        android:id="@+id/nav_my_account"
+        android:name="com.example.unmall.AccountFragment"
+        android:label="fragment_account_"
+        tools:layout="@layout/fragment_account_" />
+    <fragment
+        android:id="@+id/nav_my_signout"
+        android:name="com.example.unmall.Sign_Out_Fragment"
+        android:label="fragment_sign__out_"
+        tools:layout="@layout/fragment_sign__out_" />
+
+
+</navigation>
