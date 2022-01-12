@@ -23,6 +23,8 @@ import com.example.unmall.ui.home.HomeFragment;
 import com.example.unmall.ui.myOrder.MyOrdersFragment;
 import com.example.unmall.ui.myRewards.MyRewardsFragment;
 import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
@@ -39,11 +41,9 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.AppCompatActivity;
 
 import org.jetbrains.annotations.NotNull;
-
-import static com.example.DBqueries.DBqueries.currentUser;
 import static com.example.unmall.RegisterActivity.setSignUpFragment;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements HomeFragment.DrawerLocker {
 
     private AppBarConfiguration mAppBarConfiguration;
     private ActivityMainBinding binding;
@@ -56,6 +56,9 @@ public class MainActivity extends AppCompatActivity {
     private static final int ACCOUNT_FRAGMENT = 5;
     public static Boolean showCart = false;
 
+    public static DrawerLayout drawerLayout;
+    private FirebaseUser currentUser;
+
 
 
     private Window window;
@@ -65,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageView actionBarLogo;
     private int currentFragment = -1;
     private NavigationView navigationView;
+    private   DrawerLayout drawer;
 
     @SuppressLint({"WrongConstant", "RestrictedApi"})
     @Override
@@ -72,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
 
+        drawerLayout = findViewById(R.id.drawer_layout);
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -82,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayShowTitleEnabled(false);// title disable
         //
 
-        DrawerLayout drawer = binding.drawerLayout;
+         drawer = binding.drawerLayout;
         navigationView = binding.navView;
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
@@ -96,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull @NotNull MenuItem item) {
+                getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
                 if (currentUser != null) {
                     int id = item.getItemId();
                     if (id == R.id.nav_my_home) {
@@ -114,20 +120,25 @@ public class MainActivity extends AppCompatActivity {
                         gotoFragment("My Account", new AccountFragment(), ACCOUNT_FRAGMENT);
 
                     } else if (id == R.id.nav_my_signout) {
-                        Toast.makeText(MainActivity.this, "out", Toast.LENGTH_SHORT).show();
-
+                      FirebaseAuth.getInstance().signOut();
+                      Intent registerIntent = new Intent(MainActivity.this, RegisterActivity.class);
+                      startActivity(registerIntent);
+                      finish();
                     }
+                    //11/1/22start
+                    drawer.closeDrawer(GravityCompat.START);
+                    return true;
+                    //11/1/22start
+
 
                 }else {
-                    drawer.closeDrawer(GravityCompat.START);
+                    binding.drawerLayout.closeDrawer(GravityCompat.START);
                     signInDialog.show();
                     return false;
+
                 }
-               //todo color change krne ke liye tool bar
-               window = getWindow();
-               window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
                 //todo color change krne ke liye tool bar
-                return true;
+                //todo color change krne ke liye tool bar
             }
         });
 
@@ -149,12 +160,12 @@ public class MainActivity extends AppCompatActivity {
             //todo remove navigation drawer
             setFragment(new HomeFragment(), HOME_FRAGMENT);
         }
-        if (currentUser == null){
-            navigationView.getMenu().getItem(navigationView.getMenu().size() - 1).setEnabled(false);
-        }else {
-            navigationView.getMenu().getItem(navigationView.getMenu().size() - 1).setEnabled(true);
-
-        }
+//        if (currentUser == null){
+//            navigationView.getMenu().getItem(navigationView.getMenu().size() - 1).setEnabled(false);
+//        }else {
+//            navigationView.getMenu().getItem(navigationView.getMenu().size() - 1).setEnabled(true);
+//
+//        }
 
 
         signInDialog = new Dialog(MainActivity.this);
@@ -189,6 +200,20 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        currentUser = FirebaseAuth.getInstance().getCurrentUser();
+
+        if (currentUser == null){
+            navigationView.getMenu().getItem(navigationView.getMenu().size() - 1).setEnabled(false);
+        }else {
+            navigationView.getMenu().getItem(navigationView.getMenu().size() - 1).setEnabled(true);
+
+        }
     }
 
     @Override
@@ -284,6 +309,13 @@ public class MainActivity extends AppCompatActivity {
 
         }
         //todo phones back button code
+    }
+
+    @Override
+    public void setDrawerEnabled(boolean enabled) {
+        if (enabled && drawer != null) {
+            drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+        }
     }
     //todo: my code
 

@@ -70,6 +70,7 @@
         android:layout_marginRight="8dp"
         android:layout_marginBottom="8dp"
         android:text="Retry"
+        android:visibility="gone"
         android:textAllCaps="false"
         android:textColor="@color/white"
         android:backgroundTint="@color/red"

@@ -18,6 +18,7 @@ import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -39,6 +40,8 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -46,8 +49,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.example.DBqueries.DBqueries.currentUser;
 import static com.example.unmall.MainActivity.showCart;
 import static com.example.unmall.RegisterActivity.setSignUpFragment;
 
@@ -62,6 +63,7 @@ public class ProductDetailsActivity extends AppCompatActivity {
     TabLayoutMediator tabLayoutMediator;
     private TextView tvcodIndicator;
     private ImageView codImage;
+    private FirebaseUser currentUser;
 
     private TextView rewardTitle;
     private TextView rewardBody;
@@ -302,82 +304,89 @@ public class ProductDetailsActivity extends AppCompatActivity {
 //        productImages.add(R.drawable.greenicon);
 //        productImages.add(R.drawable.redicon);
         List<String> productImages = new ArrayList<>();
-        firebaseFirestore.collection("PRODUCTS").document("YWM9Zz4vvlPYLK316w6U").get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-            @Override
-            public void onComplete(@NonNull @NotNull Task<DocumentSnapshot> task) {
-                if (task.isSuccessful()){
-                    DocumentSnapshot documentSnapshot = task.getResult();
-                    for ( long x = 1; x < (long) documentSnapshot.get("no_of_product_images") + 1; x++){
-                        productImages.add(documentSnapshot.get("product_image_"+x).toString());
-
-                    }
-                    ProductImagesAdapter productImagesAdapter = new ProductImagesAdapter(productImages);
-                    productImagesViewPager.setAdapter(productImagesAdapter);
-
-                    productTitle.setText(documentSnapshot.get("product_title").toString());
-                    averageRating.setText(documentSnapshot.get("average_rating").toString());
-                    totalRatings.setText("("+(long)documentSnapshot.get("total_ratings")+")raings");
-                    productPrice.setText("Rs."+documentSnapshot.get("product_price").toString()+"/-");
-                    cuttedPrice.setText("Rs."+documentSnapshot.get("cutted_price").toString()+"/-");
-                    if ((boolean)documentSnapshot.get("COD")){
-                       codImage.setVisibility(View.VISIBLE);
-                       tvcodIndicator.setVisibility(View.VISIBLE);
-                    }else {
-                        codImage.setVisibility(View.INVISIBLE);
-                        tvcodIndicator.setVisibility(View.INVISIBLE);
-                    }
-
-                    rewardTitle.setText((long)documentSnapshot.get("free_coupens") + documentSnapshot.get("free_coupen_title").toString());
-                    rewardBody.setText(documentSnapshot.get("free_coupen_body").toString());
-
-                    if ((boolean)documentSnapshot.get("use_tab_layout")){
-                        productDetailsTabContainer.setVisibility(View.VISIBLE);
-                        productDetailContainer.setVisibility(View.GONE);
-                        productDescription = documentSnapshot.get("product_description").toString();
-//                        ProductSpecificationFragment.productSpecificationModelList = new ArrayList<>();
-                        productOtherDetails = documentSnapshot.get("product_other_details").toString();
-                        for (long x = 1; x < (long) documentSnapshot.get("total_spec_title") + 1; x++){
-                           productSpecificationModelList.add(new ProductSpecificationModel(0, documentSnapshot.get("spec_title_"+x).toString()));
-                            for (long y = 1; y < (long) documentSnapshot.get("spec_title_"+x+"_total_fields") + 1; y++ ){
-                                productSpecificationModelList.add(new ProductSpecificationModel(1,
-                                        documentSnapshot.get("spec_title_"+x+"_field_"+y+"_name").toString(),
-                                        documentSnapshot.get("spec_title_"+x+"_field_"+y+"_value").toString()));
+        //YWM9Zz4vvlPYLK316w6U
+        try {
+            firebaseFirestore.collection("PRODUCTS").document("YWM9Zz4vvlPYLK316w6U"/*getIntent().getStringExtra("PRODUCT_ID")*/)
+                    .get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                @Override
+                public void onComplete(@NonNull @NotNull Task<DocumentSnapshot> task) {
+                    if (task.isSuccessful()) {
+                        DocumentSnapshot documentSnapshot = task.getResult();
+                            for (long x = 1; x < (long) documentSnapshot.get("no_of_product_images") + 1; x++) {
+                                productImages.add(documentSnapshot.get("product_image_" + x).toString());
 
                             }
 
+                        ProductImagesAdapter productImagesAdapter = new ProductImagesAdapter(productImages);
+                        productImagesViewPager.setAdapter(productImagesAdapter);
+
+                        productTitle.setText(documentSnapshot.get("product_title").toString());
+                        averageRating.setText(documentSnapshot.get("average_rating").toString());
+                        totalRatings.setText("(" + (long) documentSnapshot.get("total_ratings") + ")raings");
+                        productPrice.setText("Rs." + documentSnapshot.get("product_price").toString() + "/-");
+                        cuttedPrice.setText("Rs." + documentSnapshot.get("cutted_price").toString() + "/-");
+                        if ((boolean) documentSnapshot.get("COD")) {
+                            codImage.setVisibility(View.VISIBLE);
+                            tvcodIndicator.setVisibility(View.VISIBLE);
+                        } else {
+                            codImage.setVisibility(View.INVISIBLE);
+                            tvcodIndicator.setVisibility(View.INVISIBLE);
                         }
-                    }else {
-                        productDetailsTabContainer.setVisibility(View.GONE);
-                        productDetailContainer.setVisibility(View.VISIBLE);
-                        productOnlyDescriptionBody.setText(documentSnapshot.get("product_description").toString());
+
+                        rewardTitle.setText((long) documentSnapshot.get("free_coupens") + documentSnapshot.get("free_coupen_title").toString());
+                        rewardBody.setText(documentSnapshot.get("free_coupen_body").toString());
+
+                        if ((boolean) documentSnapshot.get("use_tab_layout")) {
+                            productDetailsTabContainer.setVisibility(View.VISIBLE);
+                            productDetailContainer.setVisibility(View.GONE);
+                            productDescription = documentSnapshot.get("product_description").toString();
+//                        ProductSpecificationFragment.productSpecificationModelList = new ArrayList<>();
+                            productOtherDetails = documentSnapshot.get("product_other_details").toString();
+                            for (long x = 1; x < (long) documentSnapshot.get("total_spec_title") + 1; x++) {
+                                productSpecificationModelList.add(new ProductSpecificationModel(0, documentSnapshot.get("spec_title_" + x).toString()));
+                                for (long y = 1; y < (long) documentSnapshot.get("spec_title_" + x + "_total_fields") + 1; y++) {
+                                    productSpecificationModelList.add(new ProductSpecificationModel(1,
+                                            documentSnapshot.get("spec_title_" + x + "_field_" + y + "_name").toString(),
+                                            documentSnapshot.get("spec_title_" + x + "_field_" + y + "_value").toString()));
+
+                                }
+
+                            }
+                        } else {
+                            productDetailsTabContainer.setVisibility(View.GONE);
+                            productDetailContainer.setVisibility(View.VISIBLE);
+                            productOnlyDescriptionBody.setText(documentSnapshot.get("product_description").toString());
+                        }
+
+
+                        pDTotalRating.setText((long) documentSnapshot.get("total_ratings") + " ratings");
+                        for (int z = 0; z < 5; z++) {
+                            TextView rating = (TextView) ratingsNoContainer.getChildAt(z);
+                            rating.setText(String.valueOf((long) documentSnapshot.get((5 - z) + "_star")));
+
+                            ProgressBar progressBar = (ProgressBar) ratingsProgressBarContainer.getChildAt(z);
+                            int maxProgress = Integer.parseInt(String.valueOf((long) documentSnapshot.get("total_ratings")));
+                            progressBar.setMax(maxProgress);
+                            progressBar.setProgress(Integer.parseInt(String.valueOf((long) documentSnapshot.get((5 - z) + "_star"))));
+                        }
+
+                        totalRatingFigure.setText(String.valueOf((long) documentSnapshot.get("total_ratings")));
+                        raAverageRating.setText(documentSnapshot.get("average_rating").toString());
+                        //FragmentManager fragmentManager = getSupportFragmentManager();
+                        productDetailsViewPager.setAdapter(new ProductDetailsAdapter(getSupportFragmentManager(), getLifecycle(), productDescription, productOtherDetails, productSpecificationModelList, productDetalsTabLayout.getTabCount()));
+                        tabLayoutMediator.attach();// here is occuring problem my usb shwing problem right now
+
+                        // productDetailsViewPager.setAdapter(new ProductDetailsAdapter(getSupportFragmentManager(), productDescription, productOtherDetails, productSpecificationModelList, productDetalsTabLayout.getTabCount()));
+
+                    } else {
+                        String error = task.getException().getMessage();
+                        Toast.makeText(ProductDetailsActivity.this, error, Toast.LENGTH_SHORT).show();
                     }
-
-
-                    pDTotalRating.setText((long)documentSnapshot.get("total_ratings")+" ratings");
-                    for (int z = 0; z < 5; z++){
-                        TextView rating = (TextView) ratingsNoContainer.getChildAt(z);
-                        rating.setText(String.valueOf((long) documentSnapshot.get((5-z) +"_star")));
-
-                        ProgressBar progressBar = (ProgressBar) ratingsProgressBarContainer.getChildAt(z);
-                        int maxProgress = Integer.parseInt (String.valueOf((long)documentSnapshot.get("total_ratings")));
-                        progressBar.setMax(maxProgress);
-                        progressBar.setProgress(Integer.parseInt(String.valueOf((long) documentSnapshot.get((5-z) +"_star"))));
-                    }
-
-                    totalRatingFigure.setText(String.valueOf((long)documentSnapshot.get("total_ratings")));
-                    raAverageRating.setText(documentSnapshot.get("average_rating").toString());
-                    //FragmentManager fragmentManager = getSupportFragmentManager();
-                    productDetailsViewPager.setAdapter(new ProductDetailsAdapter(getSupportFragmentManager(), getLifecycle(), productDescription, productOtherDetails, productSpecificationModelList, productDetalsTabLayout.getTabCount()));
-                    tabLayoutMediator.attach();// here is occuring problem my usb shwing problem right now
-
-                   // productDetailsViewPager.setAdapter(new ProductDetailsAdapter(getSupportFragmentManager(), productDescription, productOtherDetails, productSpecificationModelList, productDetalsTabLayout.getTabCount()));
-
-                }else {
-                    String error = task.getException().getMessage();
-                    Toast.makeText(ProductDetailsActivity.this, error, Toast.LENGTH_SHORT).show();
                 }
-            }
-        });
+            });
+        }catch (NullPointerException e){
+            Log.e("productDetails","ProductDetails");
+        }
 
         viewPagerIndicator.setupWithViewPager(productImagesViewPager, true);
 
@@ -484,9 +493,9 @@ public class ProductDetailsActivity extends AppCompatActivity {
             }
         });
 
-        if (currentUser == null){
-            coupenRedemptionLayout.setVisibility(View.GONE);
-        }
+//        if (currentUser == null){
+//            coupenRedemptionLayout.setVisibility(View.GONE);
+//        }
 
         dSignUpBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -503,6 +512,16 @@ public class ProductDetailsActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null){
+            coupenRedemptionLayout.setVisibility(View.GONE);
+        }else {
+            coupenRedemptionLayout.setVisibility(View.VISIBLE);
+        }
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

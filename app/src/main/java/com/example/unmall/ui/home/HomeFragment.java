@@ -1,5 +1,6 @@
 package com.example.unmall.ui.home;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -13,6 +14,8 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -21,6 +24,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.bumptech.glide.Glide;
 import com.example.unmall.HmePage.HomePageAdapter;
 import com.example.unmall.HmePage.HomePageMoel;
+import com.example.unmall.MainActivity;
 import com.example.unmall.R;
 import com.example.unmall.Wishlist.WishlistModel;
 import com.example.unmall.category.CategoryAdapter;
@@ -55,6 +59,7 @@ public class HomeFragment extends Fragment {
     private List<CategoryModel> categoryModelFakeList = new ArrayList<>();
     private List<HomePageMoel> homePageMoelFakeList = new ArrayList<>();
     // fake list to show the user
+    private DrawerLocker drawerLockerListener;
 
 
     //todo: category rec
@@ -72,6 +77,18 @@ public class HomeFragment extends Fragment {
     public static SwipeRefreshLayout refreshLayout;
     private ImageView noInternetConnection;
 
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        try {
+            drawerLockerListener = (DrawerLocker) context;
+        }
+        catch(ClassCastException e){
+            //some error
+        }
+    }
+
+    @SuppressLint("WrongConstant")
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
 
@@ -89,7 +106,6 @@ public class HomeFragment extends Fragment {
         retryBtn = view.findViewById(R.id.retry_btn);
         categoryRecyclerView = view.findViewById(R.id.category_recyclerView);
         homePageRecyclerView = view.findViewById(R.id.home_page_recyclerview);
-
 
         LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
         layoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
@@ -148,8 +164,9 @@ public class HomeFragment extends Fragment {
 
         //todo: checking connection
         if (networkInfo != null && networkInfo.isConnected() == true) {
-            noInternetConnection.setVisibility(View.GONE);
-            retryBtn.setVisibility(View.GONE);
+            drawerLockerListener.setDrawerEnabled(true);
+                noInternetConnection.setVisibility(View.GONE);
+                retryBtn.setVisibility(View.GONE);
             // todo here
             categoryRecyclerView.setVisibility(View.VISIBLE);
             homePageRecyclerView.setVisibility(View.VISIBLE);
@@ -173,6 +190,7 @@ public class HomeFragment extends Fragment {
             homePageRecyclerView.setAdapter(adapter);
 
         } else {
+            MainActivity.drawerLayout.setDrawerLockMode(1);
             // todo here
             categoryRecyclerView.setVisibility(View.GONE);
             homePageRecyclerView.setVisibility(View.GONE);
@@ -196,6 +214,8 @@ public class HomeFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 reloadPage();
+                retryBtn.setVisibility(View.GONE);
+                noInternetConnection.setVisibility(View.GONE);
             }
         });
 
@@ -203,6 +223,7 @@ public class HomeFragment extends Fragment {
         return view;
     }
 
+    @SuppressLint("WrongConstant")
     private void reloadPage() {
         // todo here
         networkInfo = connectivityManager.getActiveNetworkInfo();
@@ -213,6 +234,7 @@ public class HomeFragment extends Fragment {
         loadedCategoriesNames.clear();
 
         if (networkInfo != null && networkInfo.isConnected() == true) {
+            drawerLockerListener.setDrawerEnabled(true);
             noInternetConnection.setVisibility(View.GONE);
             retryBtn.setVisibility(View.GONE);
             // todo here
@@ -233,6 +255,7 @@ public class HomeFragment extends Fragment {
             lists.add(new ArrayList<HomePageMoel>());
             loadFragmentData(homePageRecyclerView, getContext(), 0, "HOME");
         } else {
+            MainActivity.drawerLayout.setDrawerLockMode(1);
             Toast.makeText(getContext(), "No internet connection found !", Toast.LENGTH_SHORT).show();
             // todo here
             categoryRecyclerView.setVisibility(View.GONE);
@@ -248,7 +271,6 @@ public class HomeFragment extends Fragment {
     }
 
 
-
     @Override
     public void onStart() {
         super.onStart();
@@ -257,7 +279,7 @@ public class HomeFragment extends Fragment {
         lists.clear();
         loadedCategoriesNames.clear();
 
-        if(networkInfo != null && networkInfo.isConnected() == true) {
+        if (networkInfo != null && networkInfo.isConnected() == true) {
             noInternetConnection.setVisibility(View.GONE);
             retryBtn.setVisibility(View.GONE);
 
@@ -268,18 +290,29 @@ public class HomeFragment extends Fragment {
             homePageRecyclerView.setAdapter(adapter);
 
 
+            /*retryBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+//                    reloadPage();
+                }
+            });*/
+
             loadCategories(categoryRecyclerView, getContext());
 
             loadedCategoriesNames.add("HOME");
             lists.add(new ArrayList<HomePageMoel>());
-            loadFragmentData(homePageRecyclerView,getContext(),0, "HOME");
-        }else {
+            loadFragmentData(homePageRecyclerView, getContext(), 0, "HOME");
+        } else {
             Glide.with(getContext()).load(R.drawable.internet).into(noInternetConnection);
             noInternetConnection.setVisibility(View.VISIBLE);
             retryBtn.setVisibility(View.VISIBLE);
         }
         adapter = new HomePageAdapter(homePageMoelFakeList);
         adapter.notifyDataSetChanged();
+    }
+
+    public interface DrawerLocker {
+        public void setDrawerEnabled(boolean enabled);
     }
 
 }

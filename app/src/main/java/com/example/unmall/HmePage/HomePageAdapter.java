@@ -1,5 +1,6 @@
 package com.example.unmall.HmePage;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
@@ -131,7 +132,7 @@ public class HomePageAdapter extends RecyclerView.Adapter {
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
-    public void onBindViewHolder(@NonNull @NotNull RecyclerView.ViewHolder viewHolder, int position) {
+    public void onBindViewHolder(@NonNull @NotNull RecyclerView.ViewHolder viewHolder, @SuppressLint("RecyclerView") int position) {
 
         switch (homePageMoelList.get(position).getType()) {
             case HomePageMoel.BANNER_SLIDER:
@@ -469,10 +470,12 @@ public class HomePageAdapter extends RecyclerView.Adapter {
                 gridProductLayout.getChildAt(x).setBackgroundColor(Color.parseColor("#ffffff"));
 
                 if (!title.equals("")) {
+                    int finalX = x;
                     gridProductLayout.getChildAt(x).setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
                             Intent productDetaitsIntent = new Intent(itemView.getContext(), ProductDetailsActivity.class);
+                         //   productDetaitsIntent.putExtra("PRODUCT_ID",horizontalProductScrollModelList.get(finalX).getProductID());
                             itemView.getContext().startActivity(productDetaitsIntent);
                         }
                     });
